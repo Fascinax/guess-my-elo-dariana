@@ -517,21 +517,6 @@
     .mt-12 { margin-top: 12px; }
     .mt-18 { margin-top: 18px; }
     .text-center { text-align: center; }
-
-    details.host-secret {
-      margin-top: 16px;
-      background: rgba(20, 4, 22, 0.6);
-      border: 1px dashed rgba(255, 158, 210, 0.4);
-      border-radius: 12px;
-      padding: 10px 14px;
-    }
-    details.host-secret summary {
-      cursor: pointer;
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: var(--muted);
-      user-select: none;
-    }
   </style>
 </head>
 <body>
@@ -583,14 +568,6 @@
         <div class="muted" style="font-size:0.82rem;">Code de la salle</div>
         <div class="room-code-display font-display" id="host-room-code">----</div>
         <div class="muted" id="host-join-url" style="font-size:0.78rem; word-break:break-all; margin-top:4px;"></div>
-
-        <details class="host-secret">
-          <summary>Réglage discret animateur (Rang de Darina — Clip 6)</summary>
-          <div style="margin-top:10px; text-align:left;">
-            <label class="lbl">Vrai rang de Darina</label>
-            <select id="darina-rank-select" class="input" onchange="updateDarinaRank(this.value)"></select>
-          </div>
-        </details>
       </div>
 
       <div class="card">
@@ -801,24 +778,11 @@ function connectMqtt(onReady) {
 }
 
 // ==================== HOST LOGIC ====================
-function initDarinaRankSelect() {
-  const sel = document.getElementById('darina-rank-select');
-  const saved = localStorage.getItem('dariana_gme_darina_rank');
-  if (saved !== null) CLIPS[5].rankIdx = Number(saved);
-  sel.innerHTML = RANKS.map((r, i) => `<option value="${i}" ${i === CLIPS[5].rankIdx ? 'selected' : ''}>${r.name}</option>`).join('');
-}
-
-function updateDarinaRank(val) {
-  CLIPS[5].rankIdx = Number(val);
-  localStorage.setItem('dariana_gme_darina_rank', String(val));
-}
-
 function startHostMode() {
   role = 'host';
   roomCode = randomRoomCode();
   hostState = { phase: 'lobby', roundIdx: 0, players: {}, votes: {} };
 
-  initDarinaRankSelect();
   document.getElementById('host-room-code').textContent = roomCode;
   const joinUrl = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
   document.getElementById('host-join-url').textContent = joinUrl;
