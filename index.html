@@ -401,12 +401,23 @@
     /* Dist bars */
     .dist-row {
       display: grid;
-      grid-template-columns: 105px 1fr 34px;
+      grid-template-columns: 126px 1fr 34px;
       align-items: center;
       gap: 10px;
       margin-bottom: 8px;
       font-size: 0.88rem;
       font-weight: 700;
+    }
+    .dist-rank-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .dist-rank-icon {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      flex-shrink: 0;
     }
     .dist-bar-bg {
       height: 14px;
@@ -464,12 +475,25 @@
       transform: translateY(-2px);
     }
 
-    .rank-dot {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.75);
-      box-shadow: 0 0 10px currentColor;
+    .rank-icon {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+      transition: transform 0.15s;
+    }
+    .rank-btn.selected .rank-icon {
+      transform: scale(1.1);
+      filter: drop-shadow(0 0 12px rgba(250, 204, 21, 0.7));
+    }
+
+    .reveal-rank-icon {
+      width: 82px;
+      height: 82px;
+      object-fit: contain;
+      display: block;
+      margin: 8px auto 6px;
+      filter: drop-shadow(0 0 18px rgba(250, 204, 21, 0.45));
     }
 
     /* Podium */
@@ -609,6 +633,7 @@
       <div class="reveal-banner">
         <div id="reveal-surprise-tag" class="surprise-tag" style="display:none;">SURPRISE — C'ÉTAIT DARINA !</div>
         <div class="muted" style="text-transform:uppercase; letter-spacing:0.1em; font-weight:700; margin-bottom:6px;">Le vrai rang était</div>
+        <img id="reveal-rank-icon" class="reveal-rank-icon" alt="Rang" />
         <div class="reveal-rank-name font-display" id="reveal-rank-text">FER</div>
       </div>
 
@@ -680,7 +705,8 @@
       <div id="pl-state-reveal" class="card text-center" style="display:none;">
         <div id="pl-surprise-badge" class="surprise-tag" style="display:none;">C'ÉTAIT DARINA !</div>
         <div class="muted" style="text-transform:uppercase; font-weight:700; font-size:0.82rem;">Vrai rang</div>
-        <div class="font-display" style="font-size:2.1rem; color:var(--gold); margin:6px 0;" id="pl-reveal-rank">FER</div>
+        <img id="pl-reveal-icon" class="reveal-rank-icon" style="width:68px; height:68px;" alt="Rang" />
+        <div class="font-display" style="font-size:2.1rem; color:var(--gold); margin:4px 0 6px;" id="pl-reveal-rank">FER</div>
         <div id="pl-reveal-result" style="font-size:1.15rem; font-weight:800; margin-top:10px;"></div>
         <div class="muted mt-12">En attente de la manche suivante sur grand écran...</div>
       </div>
@@ -701,15 +727,15 @@ const BROKER_URL = 'wss://broker.emqx.io:8084/mqtt';
 const TOPIC_PREFIX = 'dariana_gme_v1';
 
 const RANKS = [
-  { name: 'Fer', color: '#8b8b8b' },
-  { name: 'Bronze', color: '#b87333' },
-  { name: 'Argent', color: '#d1d5db' },
-  { name: 'Or', color: '#facc15' },
-  { name: 'Platine', color: '#38bdf8' },
-  { name: 'Diamant', color: '#c084fc' },
-  { name: 'Ascendant', color: '#34d399' },
-  { name: 'Immortel', color: '#fb7185' },
-  { name: 'Radiant', color: '#fef08a' }
+  { name: 'Fer', color: '#8b8b8b', icon: 'ranks/iron.png' },
+  { name: 'Bronze', color: '#b87333', icon: 'ranks/bronze.png' },
+  { name: 'Argent', color: '#d1d5db', icon: 'ranks/silver.png' },
+  { name: 'Or', color: '#facc15', icon: 'ranks/gold.png' },
+  { name: 'Platine', color: '#38bdf8', icon: 'ranks/platinum.png' },
+  { name: 'Diamant', color: '#c084fc', icon: 'ranks/diamond.png' },
+  { name: 'Ascendant', color: '#34d399', icon: 'ranks/ascendant.png' },
+  { name: 'Immortel', color: '#fb7185', icon: 'ranks/immortal.png' },
+  { name: 'Radiant', color: '#fef08a', icon: 'ranks/radiant.png' }
 ];
 
 const CLIPS = [
@@ -929,13 +955,18 @@ function hostRevealRound() {
   document.getElementById('host-video-panel').style.display = 'none';
   document.getElementById('host-reveal-panel').style.display = 'block';
   document.getElementById('reveal-surprise-tag').style.display = clip.isSurprise ? 'inline-block' : 'none';
+  document.getElementById('reveal-rank-icon').src = RANKS[actual].icon;
+  document.getElementById('reveal-rank-icon').alt = RANKS[actual].name;
   document.getElementById('reveal-rank-text').textContent = RANKS[actual].name;
   document.getElementById('reveal-rank-text').style.color = RANKS[actual].color;
 
   const maxV = Math.max(1, ...dist);
   document.getElementById('reveal-dist').innerHTML = RANKS.map((r, i) => `
     <div class="dist-row">
-      <span style="color:${i === actual ? '#fde047' : '#ffe4f3'}">${r.name}</span>
+      <span class="dist-rank-label" style="color:${i === actual ? '#fde047' : '#ffe4f3'}">
+        <img class="dist-rank-icon" src="${r.icon}" alt="${r.name}" />
+        <span>${r.name}</span>
+      </span>
       <div class="dist-bar-bg">
         <div class="dist-bar-fill ${i === actual ? 'correct' : ''}" style="width:${Math.round((dist[i] / maxV) * 100)}%"></div>
       </div>
@@ -1009,7 +1040,7 @@ function hostResetGame() {
 function renderPlayerRankGrid() {
   document.getElementById('pl-rank-grid').innerHTML = RANKS.map((r, i) => `
     <button type="button" class="rank-btn" id="pl-rank-btn-${i}" onclick="playerSubmitVote(${i})">
-      <span class="rank-dot" style="background:${r.color}; color:${r.color};"></span>
+      <img class="rank-icon" src="${r.icon}" alt="${r.name}" />
       <span>${r.name}</span>
     </button>
   `).join('');
@@ -1072,6 +1103,8 @@ function applyPlayerState(state) {
   } else if (state.phase === 'reveal' && state.revealData) {
     const actual = state.revealData.actualRankIdx;
     document.getElementById('pl-surprise-badge').style.display = state.revealData.isSurprise ? 'inline-block' : 'none';
+    document.getElementById('pl-reveal-icon').src = RANKS[actual].icon;
+    document.getElementById('pl-reveal-icon').alt = RANKS[actual].name;
     document.getElementById('pl-reveal-rank').textContent = RANKS[actual].name;
     document.getElementById('pl-reveal-rank').style.color = RANKS[actual].color;
 
